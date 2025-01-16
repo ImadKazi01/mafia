@@ -1,4 +1,4 @@
-# Mafia
+# [WIP] Mafia
 
 Below is a sample **README.md** you can include in your repository. It provides an overview of the project, installation steps, usage instructions, and potential customization ideas.
 
