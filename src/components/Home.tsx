@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
-import { Users, UserPlus } from 'lucide-react';
-import logo from '../assets/logo.svg';
+import React, { useState } from "react";
+import { Users, UserPlus } from "lucide-react";
+import logo from "../assets/logo.svg";
 
 type HomeProps = {
   onCreateGame: (playerName: string) => void;
@@ -9,25 +9,30 @@ type HomeProps = {
   initialCode?: string;
 };
 
-export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps) {
-  const [playerName, setPlayerName] = useState('');
-  const [gameCode, setGameCode] = useState(initialCode || '');
-  const [nameError, setNameError] = useState('');
+export function Home({
+  onCreateGame,
+  onJoinGame,
+  error,
+  initialCode,
+}: HomeProps) {
+  const [playerName, setPlayerName] = useState("");
+  const [gameCode, setGameCode] = useState(initialCode || "");
+  const [nameError, setNameError] = useState("");
 
   const validateName = (name: string) => {
     if (name.length < 2) {
-      setNameError('Name must be at least 2 characters');
+      setNameError("Name must be at least 2 characters");
       return false;
     }
     if (name.length > 20) {
-      setNameError('Name must be less than 20 characters');
+      setNameError("Name must be less than 20 characters");
       return false;
     }
     if (!/^[a-zA-Z0-9\s]+$/.test(name)) {
-      setNameError('Name can only contain letters, numbers, and spaces');
+      setNameError("Name can only contain letters, numbers, and spaces");
       return false;
     }
-    setNameError('');
+    setNameError("");
     return true;
   };
 
@@ -37,7 +42,7 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
     if (newName) {
       validateName(newName);
     } else {
-      setNameError('');
+      setNameError("");
     }
   };
 
@@ -55,15 +60,13 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <img 
-            src={logo} 
-            alt="Mafia Game Logo" 
-            className="w-56 mx-auto mb-8"
-          />
+          <img src={logo} alt="Mafia Game Logo" className="w-56 mx-auto mb-8" />
           {initialCode ? (
             <p className="text-gray-400">Join game: {initialCode}</p>
           ) : (
-            <p className="text-gray-400">Create a new game or join an existing one</p>
+            <p className="text-gray-400">
+              Create a new game or join an existing one
+            </p>
           )}
         </div>
 
@@ -90,39 +93,50 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
               />
             </div>
 
-            <div className="flex gap-4">
+            {initialCode ? (
               <button
-                onClick={handleCreateGame}
-                disabled={!playerName || !!nameError || !!gameCode}
-                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <Users size={20} />
-                Create Game
-              </button>
-
-              <button
-                onClick={handleJoinGame}
-                disabled={!playerName || !gameCode || !!nameError}
-                className="flex-1 flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                onClick={() => onJoinGame(initialCode, playerName)}
+                disabled={!playerName || !!nameError}
+                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 <UserPlus size={20} />
                 Join Game
               </button>
-            </div>
+            ) : (
+              <>
+                <div className="flex gap-4">
+                  <button
+                    onClick={handleCreateGame}
+                    disabled={!playerName || !!nameError}
+                    className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <Users size={20} />
+                    Create Game
+                  </button>
 
-            {!initialCode && (
-              <div>
-                <label className="block text-sm font-medium text-gray-400 mb-2">
-                  Game Code
-                </label>
-                <input
-                  type="text"
-                  value={gameCode}
-                  onChange={(e) => setGameCode(e.target.value.toUpperCase())}
-                  className="w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
-                  placeholder="Enter game code"
-                />
-              </div>
+                  <button
+                    onClick={handleJoinGame}
+                    disabled={!playerName || !gameCode || !!nameError}
+                    className="flex-1 flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    <UserPlus size={20} />
+                    Join Game
+                  </button>
+                </div>
+
+                <div>
+                  <label className="block text-sm font-medium text-gray-400 mb-2">
+                    Game Code
+                  </label>
+                  <input
+                    type="text"
+                    value={gameCode}
+                    onChange={(e) => setGameCode(e.target.value.toUpperCase())}
+                    className="w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                    placeholder="Enter game code"
+                  />
+                </div>
+              </>
             )}
           </div>
         </div>
