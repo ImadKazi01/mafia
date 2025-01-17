@@ -8,30 +8,16 @@ console.log('Node environment:', process.env.NODE_ENV);
 
 const app = express();
 
-console.log('Setting up CORS...');
-// Add preflight handling
-app.options('*', cors());
-
-app.use(cors({
-  origin: ['https://mafiamystery.netlify.app', 'http://localhost:5173'],
-  methods: ['GET', 'POST', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization'],
-  credentials: true
-}));
-
-console.log('Creating HTTP server...');
 const httpServer = createServer(app);
 
-console.log('Setting up Socket.IO...');
 const io = new Server(httpServer, {
   cors: {
-    origin: ['https://mafiamystery.netlify.app', 'http://localhost:5173'],
-    methods: ['GET', 'POST', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-    credentials: true
+    origin: "https://mafiamystery.netlify.app",
+    methods: ["GET", "POST"],
+    allowedHeaders: ["my-custom-header"],
+    credentials: false
   },
-  transports: ['websocket', 'polling'],
-  allowEIO3: true
+  transports: ['websocket', 'polling']
 });
 
 // Add a basic health check endpoint
