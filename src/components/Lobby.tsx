@@ -36,8 +36,8 @@ export function Lobby({ gameState, currentPlayer, onStartGame }: LobbyProps) {
   const isNarrator = currentPlayer.role === 'narrator';
 
   return (
-    <div className="min-h-screen bg-gray-900 text-white p-4">
-      <div className="max-w-2xl mx-auto">
+    <div className="min-h-screen bg-gray-900 text-white p-4 flex items-center justify-center">
+      <div className="max-w-2xl w-full overflow-y-auto max-h-screen py-8">
         <div className="text-center mb-8">
           <h1 className="text-4xl font-bold mb-4">Game Lobby</h1>
           <div className="flex items-center justify-center gap-4 mb-4">
