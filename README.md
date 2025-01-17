@@ -55,6 +55,7 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
    ```
 
 2. **Install & Run the Server**:
+
    - Navigate into the **server** folder and install dependencies:
      ```bash
      cd server
@@ -67,6 +68,7 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
    - This will spin up your Node.js/Express/Socket.IO server (usually on port `3000`, if configured that way).
 
 3. **Install & Run the Frontend**:
+
    - Open **another terminal** in the **root** of the project (where the React app is).
    - Install frontend dependencies:
      ```bash
@@ -78,8 +80,8 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
      ```
    - By default, this might run on port `5173` (for Vite) or `3000` (for Create React App). Check the console for the actual URL.
 
-4. **Open** your browser at the **frontend** address (e.g., [http://localhost:5173/](http://localhost:5173/) if using Vite).  
-   - From there, you can create or join a game.  
+4. **Open** your browser at the **frontend** address (e.g., [http://localhost:5173/](http://localhost:5173/) if using Vite).
+   - From there, you can create or join a game.
    - The frontend communicates with the backend via Socket.IO events.
 
 ---
@@ -87,23 +89,28 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
 ## How To Play
 
 1. **Create Game**:
+
    - On the homepage, click **Create Game** to generate a session code.
    - Share the code with your friends.
 
 2. **Join Game**:
+
    - Enter the **Session Code** and your **Name**.
    - Click **Join Game**.
 
 3. **Start Game**:
+
    - Once all players are in the lobby, the host (narrator) can click **Start**.
    - Roles are assigned: 2 Mafia (if enough players), 1 Doctor, rest Civilians.
 
 4. **Night Phase**:
+
    - **Mafia** collaboratively pick one target to eliminate.
    - **Doctor** chooses a target to save.
    - If the Doctor saves the same person the Mafia attempt to kill, they survive.
-  
+
 5. **Day Phase**:
+
    - Kills and Saves from the **Mafia** and the **Doctor** are reveled to the players.
    - Players discuss and elminate who they suspect is the mafia.
 
@@ -113,11 +120,17 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
 
 ---
 
-## Customization Ideas
+## Improvement Ideas
+
+- **At the end of the game**: Allow players to join the next game via the code - Narrator screen always shows the code.
+- **Joining a game**: When joining a game the narrator has to allow the player to join,if they join mid game they are a spectator until the next game.
+- **Narrator Role**: Allow players to take on the role of the narrator at the end of the game, this is randomised.
 - **More Roles**: Add a Detective, Jester, Vigilante, etc.
 - **Persistent Database**: Use MongoDB or PostgreSQL if you want to track stats over time.
 - **Authentication**: Add a login system if you need user accounts.
+- **Game History**: Allow players to view the history of games they have played in.
 - **UI/UX Improvements**: Animate the transitions, add a chat window, or style the UI further.
+- **Karma System**: Allow players to gain karma for their actions, this is used for punishing players for bad behaviour eg spectators revealing roles of other players.
 
 ---
 
