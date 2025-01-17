@@ -1,119 +1,123 @@
-# [WIP] Mafia
-
-Below is a sample **README.md** you can include in your repository. It provides an overview of the project, installation steps, usage instructions, and potential customization ideas.
+Below is an **updated README** with the link to the **fully hosted version** at the top, as well as all the previously requested updates:
 
 ---
 
-# Mafia Game (Node.js + WebSockets)
+# Mafia Game (Node.js + Socket.IO + React/TypeScript)
 
-A simple real-time **Mafia** game built with **Node.js**, **Express**, and **Socket.IO**. This application demonstrates basic role assignment (Mafia, Doctor, Civilian), a night-action flow, and real-time communication among players. It also includes a minimal Vue.js frontend in the `public` directory.
+**Play a fully hosted version here:** [mafiamystery.netlify.app](https://mafiamystery.netlify.app)
+
+A simple real-time **Mafia** game built with **Node.js**, **Express**, and **Socket.IO** on the backend, and a **React + TypeScript** frontend. This project demonstrates basic role assignment (Mafia, Doctor, Civilian), night actions, and real-time updates. The server logic is housed in a `server/` directory, while the frontend is in the root (or another directory, depending on your setup).
 
 ## Features
 
-- **Create/Join Game Sessions**: Users can generate a unique session code or join with an existing code.
+- **Create/Join Game Sessions**: Generate a unique session code or join with an existing code.
 - **Role Assignment**: Randomly assigns 2 Mafia, 1 Doctor, and the rest Civilians (if enough players).
 - **Night Actions**:
-  - **Mafia**: Select players to eliminate.
-  - **Doctor**: Select a player to save.
-- **Real-Time Updates**: All changes are broadcast to every connected player in the same session.
-- **No Database**: Uses in-memory objects to store session data (simple for demos or small games).
+  - **Mafia**: Choose a target to eliminate (Mafia must agree on the same target).
+  - **Doctor**: Choose a target to save.
+- **Real-Time Updates**: Socket.IO broadcasts game state changes immediately.
+- **No Database**: All session data is kept in-memory (simpler for demos or small-scale games).
 
 ## Getting Started
 
 ### Prerequisites
 
 - **Node.js** (v14+ recommended)
-- **npm** (comes with Node.js)
+- **npm** or **yarn** (comes with Node.js)
 
-### Installation
+### Project Structure
+
+```
+.
+├── server/
+│   ├── server.js (or server.ts)       # Main Node.js/Express/Socket.IO server
+│   ├── package.json                   # Server dependencies and scripts
+│   └── ...
+├── src/ (or another folder for React) # Your React + TypeScript source files
+├── package.json                       # Frontend dependencies and scripts
+└── README.md                          # This documentation
+```
+
+Depending on your setup, your React app may be in the root or in a `client/` folder. The instructions below assume:
+
+1. Your **Node/Express server** code is in `server/`.
+2. Your **React** app is in the project root (or a parallel folder).
+
+---
+
+## Installation & Running Locally
 
 1. **Clone** the repository:
+
    ```bash
    git clone https://github.com/ImadKazi01/mafia.git
    cd mafia
    ```
 
-2. **Install** dependencies:
-   ```bash
-   npm install
-   ```
+2. **Install & Run the Server**:
+   - Navigate into the **server** folder and install dependencies:
+     ```bash
+     cd server
+     npm install
+     ```
+   - Start the backend (development mode):
+     ```bash
+     npm run dev
+     ```
+   - This will spin up your Node.js/Express/Socket.IO server (usually on port `3000`, if configured that way).
 
-3. **Start** the server:
-   ```bash
-   npm start
-   ```
+3. **Install & Run the Frontend**:
+   - Open **another terminal** in the **root** of the project (where the React app is).
+   - Install frontend dependencies:
+     ```bash
+     npm install
+     ```
+   - Start the React dev server:
+     ```bash
+     npm run dev
+     ```
+   - By default, this might run on port `5173` (for Vite) or `3000` (for Create React App). Check the console for the actual URL.
 
-4. **Open** your browser and go to:
-   ```
-   http://localhost:3000
-   ```
-   You should see the main Mafia game page.
+4. **Open** your browser at the **frontend** address (e.g., [http://localhost:5173/](http://localhost:5173/) if using Vite).  
+   - From there, you can create or join a game.  
+   - The frontend communicates with the backend via Socket.IO events.
+
+---
 
 ## How To Play
 
 1. **Create Game**:
-   - On the homepage, click the **Create Game** button to generate a new session code.
-   - Share this code with your friends.
+   - On the homepage, click **Create Game** to generate a session code.
+   - Share the code with your friends.
 
 2. **Join Game**:
-   - Enter the **Session Code** provided by the host.
-   - Enter a **Name** (e.g., "Alice").
+   - Enter the **Session Code** and your **Name**.
    - Click **Join Game**.
 
 3. **Start Game**:
-   - Once all the players are in the lobby, the host can click **Start Game**.
-   - The server assigns roles:
-     - 2 players become **Mafia** (if enough players).
-     - 1 player becomes **Doctor** (if enough players).
-     - Remaining players are **Civilians**.
+   - Once all players are in the lobby, the host (narrator) can click **Start**.
+   - Roles are assigned: 2 Mafia (if enough players), 1 Doctor, rest Civilians.
 
-4. **Night Phase** (Demo Logic):
-   - **Mafia** collectively select a target(s) to kill.
-   - **Doctor** selects a target to save.
-   - If the Doctor saves the same target the Mafia attempts to kill, that player survives.
+4. **Night Phase**:
+   - **Mafia** collaboratively pick one target to eliminate.
+   - **Doctor** chooses a target to save.
+   - If the Doctor saves the same person the Mafia attempt to kill, they survive.
 
 5. **Results**:
-   - The server notifies everyone who was killed overnight.
-   - (In a more advanced game, you’d proceed to a **Day Phase** for discussion and voting.)
+   - The server notifies everyone of who was killed.
+   - In a more advanced scenario, continue to the **Day Phase** (discussion & voting).
 
-## Project Structure
-
-```
-.
-├── server.js             # Main server file: sets up Express, Socket.IO, and game logic
-├── public/
-│   ├── index.html        # Basic Vue.js-powered frontend
-│   └── client.js         # Vue.js + Socket.IO client logic
-├── package.json          # Node.js dependencies and scripts
-└── README.md             # Project documentation
-```
-
-### server.js
-
-- **Express** serves static files from `public`.
-- **Socket.IO** handles real-time connections.
-- Maintains an in-memory `sessions` object where each session holds:
-  - `code` (unique session ID).
-  - `players` (array of player objects).
-  - `state` (e.g. "waiting", "in-progress").
-
-### public/index.html and client.js
-
-- Minimal **Vue.js** interface for creating/joining sessions, listing players, and showing roles/status.
-- Communicates with the server via **Socket.IO** events:
-  - `create-session`
-  - `join-session`
-  - `start-game`
-  - `night-action`
-  - etc.
+---
 
 ## Customization Ideas
 
-- **Day Phase & Voting**: Let players discuss who they think is Mafia, then vote to eliminate someone.
-- **Additional Roles** (e.g., Detective, Jester, etc.).
-- **Persistent Storage**: Store game history or player stats in a database (MongoDB, PostgreSQL, etc.).
-- **User Authentication**: Use a login system if you want persistent player profiles or stats.
-- **UI/UX Enhancements**: Add a lobby screen, night/day transition animations, custom themes.
+- **Day Phase & Voting**: Let players discuss and vote to eliminate a suspected Mafia.
+- **More Roles**: Add a Detective, Jester, Vigilante, etc.
+- **Persistent Database**: Use MongoDB or PostgreSQL if you want to track stats over time.
+- **Authentication**: Add a login system if you need user accounts.
+- **UI/UX Improvements**: Animate the transitions, add a chat window, or style the UI further.
+
+---
 
 ## Contributing
 
@@ -123,10 +127,12 @@ A simple real-time **Mafia** game built with **Node.js**, **Express**, and **Soc
 4. **Push** to the branch (`git push origin feature/MyFeature`).
 5. **Open** a Pull Request on GitHub.
 
+---
+
 ## License
 
-This project is licensed under the [MIT License](LICENSE), so feel free to use and modify it for your own projects.
+This project is licensed under the [MIT License](LICENSE). Feel free to fork and modify it for your own needs.
 
 ---
 
-Enjoy playing **Mafia** with your friends! If you run into any issues or have suggestions, feel free to open an issue or submit a pull request. Happy coding!
+Enjoy playing **Mafia**! If you have questions, suggestions, or run into any issues, feel free to open an issue or submit a pull request. Happy coding!
