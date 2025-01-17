@@ -5,18 +5,20 @@ import cors from 'cors';
 
 const app = express();
 app.use(cors({
-  origin: process.env.FRONTEND_URL || "http://localhost:5173",
-  credentials: true
+  origin: "*",
+  methods: ["GET", "POST", "OPTIONS"],
+  credentials: false
 }));
 
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: process.env.FRONTEND_URL || "http://localhost:5173",
-    methods: ["GET", "POST"],
-    credentials: true
-  }
+    origin: "*",
+    methods: ["GET", "POST", "OPTIONS"],
+    credentials: false
+  },
+  transports: ['websocket', 'polling']
 });
 
 // Store game sessions
