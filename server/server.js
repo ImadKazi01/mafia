@@ -13,13 +13,18 @@ const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "https://mafiamystery.netlify.app",
+    origin: true,
     methods: ["GET", "POST"],
-    allowedHeaders: ["my-custom-header"],
-    credentials: false
+    credentials: true
   },
   transports: ['websocket', 'polling']
 });
+
+// Add basic Express CORS for HTTP endpoints
+app.use(cors({
+  origin: true,
+  credentials: true
+}));
 
 // Add a basic health check endpoint
 app.get('/', (req, res) => {
@@ -513,7 +518,7 @@ io.on('connection', (socket) => {
   });
 });
 
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 3000;
 httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
   console.log('Server fully started!');
