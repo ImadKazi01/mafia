@@ -10,9 +10,8 @@ type HomeProps = {
 };
 
 export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps) {
-  const [gameCode, setGameCode] = useState(initialCode || '');
   const [playerName, setPlayerName] = useState('');
-  const [isJoining, setIsJoining] = useState(!!initialCode);
+  const [gameCode, setGameCode] = useState(initialCode || '');
   const [nameError, setNameError] = useState('');
 
   const validateName = (name: string) => {
@@ -42,19 +41,14 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
     }
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!playerName.trim()) return;
-    
-    if (!validateName(playerName)) {
-      return;
-    }
+  const handleCreateGame = () => {
+    if (!playerName.trim() || !validateName(playerName)) return;
+    onCreateGame(playerName);
+  };
 
-    if (isJoining || initialCode) {
-      onJoinGame(gameCode || initialCode || '', playerName);
-    } else {
-      onCreateGame(playerName);
-    }
+  const handleJoinGame = () => {
+    if (!playerName.trim() || !validateName(playerName)) return;
+    onJoinGame(gameCode, playerName);
   };
 
   return (
@@ -74,33 +68,51 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
         </div>
 
         <div className="bg-gray-800 p-8 rounded-lg shadow-xl">
-          <form onSubmit={handleSubmit} className="space-y-6">
-            {(error || nameError) && (
-              <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-md">
-                {error || nameError}
-              </div>
-            )}
-            
+          {(error || nameError) && (
+            <div className="bg-red-900/20 border border-red-700 text-red-200 px-4 py-2 rounded-md mb-6">
+              {error || nameError}
+            </div>
+          )}
+
+          <div className="space-y-6">
             <div>
-              <label className="block text-sm font-medium mb-2">
+              <label className="block text-sm font-medium text-gray-400 mb-2">
                 Your Name
               </label>
               <input
                 type="text"
                 value={playerName}
                 onChange={handleNameChange}
-                className={`w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none
-                  ${nameError ? 'border border-red-500' : ''}`}
+                className="w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                 placeholder="Enter your name"
-                required
-                autoFocus
                 maxLength={20}
+                autoFocus
               />
             </div>
 
-            {(isJoining && !initialCode) && (
+            <div className="flex gap-4">
+              <button
+                onClick={handleCreateGame}
+                disabled={!playerName || !!nameError || !!gameCode}
+                className="flex-1 flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <Users size={20} />
+                Create Game
+              </button>
+
+              <button
+                onClick={handleJoinGame}
+                disabled={!playerName || !gameCode || !!nameError}
+                className="flex-1 flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <UserPlus size={20} />
+                Join Game
+              </button>
+            </div>
+
+            {!initialCode && (
               <div>
-                <label className="block text-sm font-medium mb-2">
+                <label className="block text-sm font-medium text-gray-400 mb-2">
                   Game Code
                 </label>
                 <input
@@ -109,43 +121,10 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
                   onChange={(e) => setGameCode(e.target.value.toUpperCase())}
                   className="w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
                   placeholder="Enter game code"
-                  required
                 />
               </div>
             )}
-
-            <div className="flex gap-4">
-              {!initialCode && (
-                <>
-                  <button
-                    type="submit"
-                    onClick={() => setIsJoining(false)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
-                  >
-                    <UserPlus size={20} />
-                    Create Game
-                  </button>
-                  <button
-                    type="submit"
-                    onClick={() => setIsJoining(true)}
-                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors"
-                  >
-                    <Users size={20} />
-                    Join Game
-                  </button>
-                </>
-              )}
-              {initialCode && (
-                <button
-                  type="submit"
-                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors"
-                >
-                  <Users size={20} />
-                  Join Game
-                </button>
-              )}
-            </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>

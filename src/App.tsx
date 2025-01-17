@@ -166,6 +166,7 @@ export default function App() {
         gameState={gameState}
         currentPlayer={currentPlayer!}
         onStartGame={handleStartGame}
+        onLeaveGame={handleLeaveGame}
       />
     );
   }
