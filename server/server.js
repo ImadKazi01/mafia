@@ -5,6 +5,7 @@ import cors from 'cors';
 
 console.log('Starting server...');
 console.log('Node environment:', process.env.NODE_ENV);
+console.log('Fronted:', process.env.FRONTEND_URL)
 
 const app = express();
 
