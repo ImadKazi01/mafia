@@ -19,6 +19,8 @@ export function Home({
   const [gameCode, setGameCode] = useState(initialCode || "");
   const [nameError, setNameError] = useState("");
 
+  const isGameNotFound = error?.toLowerCase().includes("game not found");
+
   const validateName = (name: string) => {
     if (name.length < 2) {
       setNameError("Name must be at least 2 characters");
@@ -72,8 +74,10 @@ export function Home({
 
         <div className="bg-gray-800 p-8 rounded-lg shadow-xl">
           {(error || nameError) && (
-            <div className="bg-red-900/20 border border-red-700 text-red-200 px-4 py-2 rounded-md mb-6">
-              {error || nameError}
+            <div className="mb-6">
+              <div className="bg-red-900/20 border border-red-700 text-red-200 px-4 py-2 rounded-md">
+                {error || nameError}
+              </div>
             </div>
           )}
 
@@ -94,14 +98,25 @@ export function Home({
             </div>
 
             {initialCode ? (
-              <button
-                onClick={() => onJoinGame(initialCode, playerName)}
-                disabled={!playerName || !!nameError}
-                className="w-full flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                <UserPlus size={20} />
-                Join Game
-              </button>
+              <div className="space-y-4">
+                <button
+                  onClick={() => onJoinGame(initialCode, playerName)}
+                  disabled={!playerName || !!nameError}
+                  className="w-full flex items-center justify-center gap-2 bg-red-600 hover:bg-red-700 px-4 py-2 rounded-md transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <UserPlus size={20} />
+                  Join Game
+                </button>
+
+                {isGameNotFound && (
+                  <button
+                    onClick={() => (window.location.href = "/")}
+                    className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors"
+                  >
+                    Return Home
+                  </button>
+                )}
+              </div>
             ) : (
               <>
                 <div className="flex gap-4">
