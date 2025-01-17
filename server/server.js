@@ -549,6 +549,36 @@ io.on('connection', (socket) => {
     // Send the new game state to all players
     io.to(gameCode).emit('gameState', newGame);
   });
+
+  socket.on('leaveGame', ({ gameCode }) => {
+    const game = games.get(gameCode);
+    if (!game) return;
+
+    // Remove player from the game
+    const playerIndex = game.players.findIndex(p => p.id === socket.id);
+    if (playerIndex !== -1) {
+      const player = game.players[playerIndex];
+      game.players.splice(playerIndex, 1);
+      
+      // If game is empty, delete it
+      if (game.players.length === 0) {
+        games.delete(gameCode);
+      } else {
+        // If narrator leaves, assign new narrator
+        if (player.role === 'narrator' && !game.isGameStarted) {
+          const newNarrator = game.players[0];
+          newNarrator.role = 'narrator';
+          io.to(newNarrator.id).emit('playerInfo', newNarrator);
+        }
+        
+        // Update remaining players
+        io.to(gameCode).emit('gameState', game);
+      }
+
+      // Leave the socket room
+      socket.leave(gameCode);
+    }
+  });
 });
 
 const PORT = process.env.PORT || 3000;

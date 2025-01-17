@@ -144,6 +144,9 @@ export default function App() {
   };
 
   const handleLeaveGame = () => {
+    if (socket && gameState) {
+      socket.emit('leaveGame', { gameCode: gameState.gameCode });
+    }
     sessionStorage.removeItem('gameSession');
     setGameState(null);
     setCurrentPlayer(null);
@@ -176,6 +179,7 @@ export default function App() {
       gameState={gameState}
       currentPlayer={currentPlayer!}
       onAction={handleGameAction}
+      onLeaveGame={handleLeaveGame}
     />
   );
 }

@@ -6,23 +6,25 @@ type GameProps = {
   gameState: GameState;
   currentPlayer: Player;
   onAction: (targetId: string) => void;
+  onLeaveGame: () => void;
 };
 
-export function Game({ gameState, currentPlayer, onAction }: GameProps) {
+export function Game({ gameState, currentPlayer, onAction, onLeaveGame }: GameProps) {
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
-  const isNight = gameState.phase === 'night';
-  const isSpectator = !currentPlayer.isAlive;
-  const canAct = isNight && !isSpectator && (currentPlayer.role === 'mafia' || currentPlayer.role === 'doctor');
-  const canVote = !isNight && !isSpectator && currentPlayer.role !== 'narrator';
-  const narrator = gameState.players.find(p => p.role === 'narrator');
-  const isMafia = currentPlayer.role === 'mafia';
-  const isDoctor = currentPlayer.role === 'doctor';
-  const isGameOver = gameState.isGameOver;
   const [isReconnecting, setIsReconnecting] = useState(false);
-
+  
   // Find the most up-to-date player info from gameState
-  const updatedPlayerInfo = gameState.players.find(p => p.id === currentPlayer.id);
-  const isEliminated = !updatedPlayerInfo?.isAlive;
+  const updatedPlayerInfo = gameState.players.find(p => p.id === currentPlayer?.id);
+  const isEliminated = updatedPlayerInfo ? !updatedPlayerInfo.isAlive : false;
+  
+  const isNight = gameState.phase === 'night';
+  const isSpectator = updatedPlayerInfo ? !updatedPlayerInfo.isAlive : false;
+  const canAct = isNight && !isSpectator && (currentPlayer?.role === 'mafia' || currentPlayer?.role === 'doctor');
+  const canVote = !isNight && !isSpectator && currentPlayer?.role !== 'narrator';
+  const narrator = gameState.players.find(p => p.role === 'narrator');
+  const isMafia = currentPlayer?.role === 'mafia';
+  const isDoctor = currentPlayer?.role === 'doctor';
+  const isGameOver = gameState.isGameOver;
 
   // Get other mafia members and their targets
   const mafiaMembers = gameState.players.filter(p => p.role === 'mafia' && p.isAlive);
@@ -50,7 +52,7 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
     return gameState.isGameOver || 
            !player.isAlive || 
            isSpectator || 
-           currentPlayer.role === 'narrator' || 
+           currentPlayer?.role === 'narrator' || 
            (isMafia && player.role === 'mafia');
   };
 
@@ -62,9 +64,9 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
 
   // Filter players to exclude narrator from targeting
   const targetablePlayers = gameState.players.filter(p => 
-    p.id !== currentPlayer.id && 
+    p.id !== currentPlayer?.id && 
     p.role !== 'narrator' &&
-    (currentPlayer.role !== 'mafia' || p.role !== 'mafia') // Mafia can't target other mafia
+    (currentPlayer?.role !== 'mafia' || p.role !== 'mafia') // Mafia can't target other mafia
   );
 
   const getWinnerIcon = () => {
@@ -122,14 +124,22 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
                 <h1 className="text-6xl font-bold mb-6">Game Over</h1>
                 {getWinnerIcon()}
                 <p className="text-2xl text-yellow-400 mb-8">{gameState.publicMessage}</p>
-                {currentPlayer.role === 'narrator' && (
+                <div className="flex items-center justify-center gap-4 mb-8">
+                  {currentPlayer?.role === 'narrator' && (
+                    <button
+                      onClick={() => onAction('restart-game')}
+                      className="bg-red-600 hover:bg-red-700 px-8 py-4 rounded-lg transition-colors text-xl"
+                    >
+                      Start New Game with Same Players
+                    </button>
+                  )}
                   <button
-                    onClick={() => onAction('restart-game')}
-                    className="bg-green-600 hover:bg-green-700 px-8 py-4 rounded-lg transition-colors text-xl mb-8"
+                    onClick={onLeaveGame}
+                    className="bg-gray-600 hover:bg-gray-700 px-8 py-4 rounded-lg transition-colors text-xl"
                   >
-                    Start New Game with Same Players
+                    Leave Game
                   </button>
-                )}
+                </div>
               </div>
               <div className="bg-gray-800 rounded-lg p-6">
                 <h2 className="text-xl font-semibold mb-4">Final Player Roles</h2>
@@ -170,13 +180,13 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
                       Spectator Mode
                     </span>
                   ) : (
-                    `You are a ${currentPlayer.role}`
+                    `You are a ${currentPlayer?.role}`
                   )}
                 </p>
                 {isMafia && !isSpectator && (
                   <div className="text-red-400 mt-2">
                     <p>Other Mafia members:</p>
-                    {mafiaMembers.filter(m => m.id !== currentPlayer.id).map(m => (
+                    {mafiaMembers.filter(m => m.id !== currentPlayer?.id).map(m => (
                       <span key={m.id} className="mx-1">{m.name}</span>
                     ))}
                     {mafiaActions.length > 0 && (
@@ -196,7 +206,7 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
                 )}
               </div>
 
-              {gameState.message && currentPlayer.role === 'narrator' && (
+              {gameState.message && currentPlayer?.role === 'narrator' && (
                 <div className="bg-gray-800 p-4 rounded-lg mb-6 text-center">
                   <p className="text-lg text-yellow-400">Narrator Info: {gameState.message}</p>
                 </div>
@@ -212,10 +222,10 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
                 <div className="bg-gray-800 p-4 rounded-lg mb-6 text-center">
                   <p className="text-lg text-green-400 mb-3">Doctor's Actions</p>
                   <button
-                    onClick={() => handleAction(currentPlayer.id)}
+                    onClick={() => handleAction(currentPlayer?.id)}
                     className={`
                       bg-green-600 hover:bg-green-700 px-4 py-2 rounded-lg transition-colors
-                      ${selectedPlayer === currentPlayer.id ? 'ring-2 ring-blue-500' : ''}
+                      ${selectedPlayer === currentPlayer?.id ? 'ring-2 ring-blue-500' : ''}
                     `}
                   >
                     Save Yourself
@@ -264,7 +274,7 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
                 </div>
               </div>
 
-              {currentPlayer.role === 'narrator' && (
+              {currentPlayer?.role === 'narrator' && (
                 <div className="mt-6 text-center">
                   <button
                     onClick={() => onAction('next-phase')}
