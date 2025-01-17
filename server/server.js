@@ -1,11 +1,11 @@
-import express from 'express';
-import { createServer } from 'http';
-import { Server } from 'socket.io';
-import cors from 'cors';
+import express from "express";
+import { createServer } from "http";
+import { Server } from "socket.io";
+import cors from "cors";
 
-console.log('Starting server...');
-console.log('Node environment:', process.env.NODE_ENV);
-console.log('Fronted:', process.env.FRONTEND_URL)
+console.log("Starting server...");
+console.log("Node environment:", process.env.NODE_ENV);
+console.log("Fronted:", process.env.FRONTEND_URL);
 
 const app = express();
 
@@ -15,20 +15,22 @@ const io = new Server(httpServer, {
   cors: {
     origin: true,
     methods: ["GET", "POST"],
-    credentials: true
+    credentials: true,
   },
-  transports: ['websocket', 'polling']
+  transports: ["websocket", "polling"],
 });
 
 // Add basic Express CORS for HTTP endpoints
-app.use(cors({
-  origin: true,
-  credentials: true
-}));
+app.use(
+  cors({
+    origin: true,
+    credentials: true,
+  })
+);
 
 // Add a basic health check endpoint
-app.get('/', (req, res) => {
-  res.send('Server is running');
+app.get("/", (req, res) => {
+  res.send("Server is running");
 });
 
 // Store game sessions
@@ -36,8 +38,8 @@ const games = new Map();
 
 // Generate a random 6-character game code
 function generateGameCode() {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789';
-  let code = '';
+  const chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789";
+  let code = "";
   for (let i = 0; i < 6; i++) {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
@@ -50,16 +52,16 @@ function assignRoles(players) {
   const numPlayers = players.length - 1; // Excluding narrator
 
   // Add roles without narrator (narrator is already assigned)
-  roles.push('mafia'); // At least 1 mafia
-  roles.push('doctor'); // 1 doctor
-  
+  roles.push("mafia"); // At least 1 mafia
+  roles.push("doctor"); // 1 doctor
+
   // Fill remaining slots with civilians and possibly another mafia
   while (roles.length < numPlayers) {
     // Add another mafia if more than 5 players
     if (roles.length === 5 && players.length > 5) {
-      roles.push('mafia');
+      roles.push("mafia");
     } else {
-      roles.push('civilian');
+      roles.push("civilian");
     }
   }
 
@@ -70,13 +72,13 @@ function assignRoles(players) {
   }
 
   // Assign roles to players, skipping the narrator
-  return players.map(player => {
-    if (player.role === 'narrator') {
+  return players.map((player) => {
+    if (player.role === "narrator") {
       return {
         ...player,
         isAlive: true,
         votes: 0,
-        isSpectator: false
+        isSpectator: false,
       };
     }
     return {
@@ -84,7 +86,7 @@ function assignRoles(players) {
       role: roles.shift(),
       isAlive: true,
       votes: 0,
-      isSpectator: false
+      isSpectator: false,
     };
   });
 }
@@ -94,19 +96,24 @@ function createBotPlayer(gameCode) {
   return {
     id: `bot-${Math.random().toString(36).substr(2, 9)}`,
     name: `Bot ${Math.floor(Math.random() * 1000)}`,
-    isBot: true
+    isBot: true,
   };
 }
 
 // Add these helper functions at the top with other utility functions
 function checkGameEnd(game) {
-  const livingPlayers = game.players.filter(p => p.isAlive && p.role !== 'narrator');
-  const livingMafia = livingPlayers.filter(p => p.role === 'mafia');
-  const livingCivilians = livingPlayers.filter(p => p.role !== 'mafia' && p.role !== 'narrator');
+  const livingPlayers = game.players.filter(
+    (p) => p.isAlive && p.role !== "narrator"
+  );
+  const livingMafia = livingPlayers.filter((p) => p.role === "mafia");
+  const livingCivilians = livingPlayers.filter(
+    (p) => p.role !== "mafia" && p.role !== "narrator"
+  );
 
   // If all mafia are dead, civilians win
   if (livingMafia.length === 0) {
-    game.publicMessage = "Game Over - Civilians Win! All mafia have been eliminated.";
+    game.publicMessage =
+      "Game Over - Civilians Win! All mafia have been eliminated.";
     game.isGameOver = true;
     return true;
   }
@@ -127,13 +134,13 @@ function createGameState(gameCode, players) {
   return {
     gameCode,
     players,
-    phase: 'lobby',
+    phase: "lobby",
     isGameStarted: false,
     isGameOver: false,
     actions: {},
     votes: {},
     message: null, // Narrator-only messages
-    publicMessage: null // Messages visible to all players
+    publicMessage: null, // Messages visible to all players
   };
 }
 
@@ -141,14 +148,14 @@ function createGameState(gameCode, players) {
 function calculateVoteResults(game) {
   // Count votes for each player
   const voteCounts = {};
-  Object.values(game.votes).forEach(targetId => {
+  Object.values(game.votes).forEach((targetId) => {
     voteCounts[targetId] = (voteCounts[targetId] || 0) + 1;
   });
 
   // Find the player(s) with the most votes
   let maxVotes = 0;
   let eliminatedPlayers = [];
-  
+
   Object.entries(voteCounts).forEach(([playerId, votes]) => {
     if (votes > maxVotes) {
       maxVotes = votes;
@@ -170,23 +177,27 @@ function calculateVoteResults(game) {
 // Add this function to get formatted night actions for narrator
 function getNarratorNightInfo(game) {
   const mafiaActions = Object.entries(game.actions)
-    .filter(([_, action]) => action.action === 'mafia')
+    .filter(([_, action]) => action.action === "mafia")
     .map(([playerId, action]) => ({
-      mafiaName: game.players.find(p => p.id === playerId)?.name,
-      targetName: game.players.find(p => p.id === action.targetId)?.name
+      mafiaName: game.players.find((p) => p.id === playerId)?.name,
+      targetName: game.players.find((p) => p.id === action.targetId)?.name,
     }));
 
-  const doctorAction = Object.entries(game.actions)
-    .find(([_, action]) => action.action === 'doctor');
-  
-  const doctorInfo = doctorAction ? {
-    doctorName: game.players.find(p => p.id === doctorAction[0])?.name,
-    targetName: game.players.find(p => p.id === doctorAction[1].targetId)?.name
-  } : null;
+  const doctorAction = Object.entries(game.actions).find(
+    ([_, action]) => action.action === "doctor"
+  );
+
+  const doctorInfo = doctorAction
+    ? {
+        doctorName: game.players.find((p) => p.id === doctorAction[0])?.name,
+        targetName: game.players.find((p) => p.id === doctorAction[1].targetId)
+          ?.name,
+      }
+    : null;
 
   return {
     mafiaActions,
-    doctorInfo
+    doctorInfo,
   };
 }
 
@@ -196,200 +207,237 @@ function handleReconnection(socket, gameCode, playerId, playerName) {
   if (!game) return false;
 
   // Find the player in the game
-  const player = game.players.find(p => p.id === playerId || p.name === playerName);
+  const player = game.players.find(
+    (p) => p.id === playerId || p.name === playerName
+  );
   if (!player) return false;
 
   // Update the player's socket ID
   player.id = socket.id;
-  
+
   // Rejoin the game room
   socket.join(gameCode);
-  
+
   // Send current game state and player info
-  socket.emit('playerInfo', player);
-  socket.emit('gameState', game);
-  
+  socket.emit("playerInfo", player);
+  socket.emit("gameState", game);
+
   return true;
 }
 
-io.on('connection', (socket) => {
-  console.log('Client connected:', socket.id);
+io.on("connection", (socket) => {
+  console.log("Client connected:", socket.id);
 
   // Create a new game
-  socket.on('createGame', ({ playerName }) => {
+  socket.on("createGame", ({ playerName }) => {
     const gameCode = generateGameCode();
-    
+
     // Even for the first player, store their name in lowercase for future comparisons
     const player = {
       id: socket.id,
       name: playerName,
-      role: 'narrator'
+      role: "narrator",
     };
 
     games.set(gameCode, createGameState(gameCode, [player]));
 
     socket.join(gameCode);
-    socket.emit('playerInfo', player);
-    socket.emit('gameState', games.get(gameCode));
+    socket.emit("playerInfo", player);
+    socket.emit("gameState", games.get(gameCode));
   });
 
   // Join an existing game
-  socket.on('joinGame', ({ gameCode, playerName }) => {
+  socket.on("joinGame", ({ gameCode, playerName }) => {
     const game = games.get(gameCode);
     if (!game) {
-      socket.emit('error', 'Game not found');
+      socket.emit("error", "Game not found");
       return;
     }
 
     if (game.isGameStarted) {
-      socket.emit('error', 'Game already started');
+      socket.emit("error", "Game already started");
       return;
     }
 
     // Check for duplicate names
-    const isDuplicateName = game.players.some(p => 
-      p.name.toLowerCase() === playerName.toLowerCase()
+    const isDuplicateName = game.players.some(
+      (p) => p.name.toLowerCase() === playerName.toLowerCase()
     );
-    
+
     if (isDuplicateName) {
-      socket.emit('error', 'That name is already taken');
+      socket.emit("error", "That name is already taken");
       return;
     }
 
     const player = {
       id: socket.id,
-      name: playerName
+      name: playerName,
     };
 
     game.players.push(player);
     socket.join(gameCode);
-    socket.emit('playerInfo', player);
-    io.to(gameCode).emit('gameState', game);
+    socket.emit("playerInfo", player);
+    io.to(gameCode).emit("gameState", game);
   });
 
   // Start the game
-  socket.on('startGame', ({ gameCode }) => {
+  socket.on("startGame", ({ gameCode }) => {
     const game = games.get(gameCode);
     if (!game) return;
 
     game.players = assignRoles(game.players);
     game.isGameStarted = true;
-    game.phase = 'night';
+    game.phase = "night";
     game.message = null;
 
     // Send updated game state to all players
-    game.players.forEach(player => {
-      io.to(player.id).emit('playerInfo', player);
+    game.players.forEach((player) => {
+      io.to(player.id).emit("playerInfo", player);
     });
-    io.to(gameCode).emit('gameState', game);
+    io.to(gameCode).emit("gameState", game);
   });
 
   // Handle player actions (kill/save)
-  socket.on('gameAction', ({ gameCode, targetId, action }) => {
+  socket.on("gameAction", ({ gameCode, targetId, action }) => {
     const game = games.get(gameCode);
     if (!game || game.isGameOver) return;
 
-    const player = game.players.find(p => p.id === socket.id);
+    const player = game.players.find((p) => p.id === socket.id);
     if (!player || !player.isAlive) return;
 
     // Prevent targeting narrator
-    const target = game.players.find(p => p.id === targetId);
-    if (target?.role === 'narrator') return;
+    const target = game.players.find((p) => p.id === targetId);
+    if (target?.role === "narrator") return;
 
     // Prevent mafia targeting other mafia
-    if (player.role === 'mafia' && target?.role === 'mafia') return;
+    if (player.role === "mafia" && target?.role === "mafia") return;
 
     // Store the action without syncing
     game.actions[socket.id] = { targetId, action };
 
     // Update narrator's view of night actions
-    if (game.phase === 'night') {
+    if (game.phase === "night") {
       const nightInfo = getNarratorNightInfo(game);
-      const narrator = game.players.find(p => p.role === 'narrator');
+      const narrator = game.players.find((p) => p.role === "narrator");
       if (narrator) {
-        const mafiaStatus = nightInfo.mafiaActions.length > 0 
-          ? `Mafia actions: ${nightInfo.mafiaActions.map(a => 
-              `${a.mafiaName} targeting ${a.targetName}`).join(', ')}`
-          : 'Waiting for mafia actions...';
-          
+        const mafiaStatus =
+          nightInfo.mafiaActions.length > 0
+            ? `Mafia actions: ${nightInfo.mafiaActions
+                .map((a) => `${a.mafiaName} targeting ${a.targetName}`)
+                .join(", ")}`
+            : "Waiting for mafia actions...";
+
         const doctorStatus = nightInfo.doctorInfo
           ? `Doctor (${nightInfo.doctorInfo.doctorName}) protecting ${nightInfo.doctorInfo.targetName}`
-          : 'Waiting for doctor action...';
+          : "Waiting for doctor action...";
 
         game.message = `${mafiaStatus}\n${doctorStatus}`;
       }
     }
 
     // Process night actions if all required actions are complete
-    const livingMafia = game.players.filter(p => p.role === 'mafia' && p.isAlive);
-    const livingDoctor = game.players.find(p => p.role === 'doctor' && p.isAlive);
-    
-    const allMafiaActed = livingMafia.length > 0 && 
-      livingMafia.every(p => game.actions[p.id]);
+    const livingMafia = game.players.filter(
+      (p) => p.role === "mafia" && p.isAlive
+    );
+    const livingDoctor = game.players.find(
+      (p) => p.role === "doctor" && p.isAlive
+    );
+
+    const allMafiaActed =
+      livingMafia.length > 0 && livingMafia.every((p) => game.actions[p.id]);
     const doctorActed = !livingDoctor || game.actions[livingDoctor.id];
 
     if (allMafiaActed && doctorActed) {
       // Process night actions
-      const mafiaAction = Object.values(game.actions)
-        .find(action => action.action === 'mafia');
+      const mafiaAction = Object.values(game.actions).find(
+        (action) => action.action === "mafia"
+      );
       const mafiaTarget = mafiaAction?.targetId;
-      
-      const doctorAction = livingDoctor ? Object.values(game.actions)
-        .find(action => action.action === 'doctor') : null;
+
+      const doctorAction = livingDoctor
+        ? Object.values(game.actions).find(
+            (action) => action.action === "doctor"
+          )
+        : null;
       const doctorTarget = doctorAction?.targetId;
+
+      // Initialize night results message
+      let nightResults = [];
 
       // Set message based on what happened
       if (mafiaTarget) {
-        const targetPlayer = game.players.find(p => p.id === mafiaTarget);
+        const targetPlayer = game.players.find((p) => p.id === mafiaTarget);
         if (mafiaTarget === doctorTarget) {
           game.message = `${targetPlayer.name} (${targetPlayer.role}) was targeted but saved by the doctor!`;
-          game.publicMessage = `The Mafia targeted ${targetPlayer.name} but they were saved by the Doctor!`;
+          nightResults.push(
+            `The Doctor successfully saved ${targetPlayer.name} from the Mafia's attack!`
+          );
         } else {
           if (targetPlayer) {
             targetPlayer.isAlive = false;
             targetPlayer.isSpectator = true;
-            
-            io.to(targetPlayer.id).emit('playerInfo', targetPlayer);
-            
+            io.to(targetPlayer.id).emit("playerInfo", targetPlayer);
             game.message = `${targetPlayer.name} (${targetPlayer.role}) was killed by the mafia!`;
-            game.publicMessage = `${targetPlayer.name} was killed by the Mafia! They were a ${targetPlayer.role}.`;
+            nightResults.push(
+              `${targetPlayer.name} was killed by the Mafia! They were a ${targetPlayer.role}.`
+            );
           }
         }
+
+        // If doctor saved someone else while mafia killed someone
+        if (doctorTarget && doctorTarget !== mafiaTarget) {
+          const savedPlayer = game.players.find((p) => p.id === doctorTarget);
+          nightResults.push(
+            `The Doctor protected ${savedPlayer.name} tonight.`
+          );
+        }
+      } else {
+        nightResults.push("The night passes peacefully...");
       }
+
+      // Combine all night results into a single message
+      game.publicMessage = nightResults.join("\n");
 
       // Check if game is over
       if (checkGameEnd(game)) {
-        io.to(gameCode).emit('gameState', game);
+        io.to(gameCode).emit("gameState", game);
         return;
       }
 
       // Clear actions and move to next phase
       game.actions = {};
-      game.phase = game.phase === 'night' ? 'day' : 'night';
-      
-      if (game.phase === 'night') {
+      game.phase = game.phase === "night" ? "day" : "night";
+
+      if (game.phase === "night") {
         game.votes = {};
-        game.players.forEach(p => p.votes = 0);
+        game.players.forEach((p) => (p.votes = 0));
       }
 
-      io.to(gameCode).emit('gameState', game);
+      io.to(gameCode).emit("gameState", game);
     } else {
       // Just update the game state to show current actions
-      io.to(gameCode).emit('gameState', game);
+      io.to(gameCode).emit("gameState", game);
     }
 
     // Auto-respond for bots during night phase
-    if (game.phase === 'night') {
-      const livingPlayers = game.players.filter(p => p.isAlive && !p.isSpectator);
-      
+    if (game.phase === "night") {
+      const livingPlayers = game.players.filter(
+        (p) => p.isAlive && !p.isSpectator
+      );
+
       // Make bots take actions
-      game.players.forEach(player => {
-        if (player.isBot && player.isAlive && (player.role === 'mafia' || player.role === 'doctor')) {
-          const randomTarget = livingPlayers[Math.floor(Math.random() * livingPlayers.length)];
+      game.players.forEach((player) => {
+        if (
+          player.isBot &&
+          player.isAlive &&
+          (player.role === "mafia" || player.role === "doctor")
+        ) {
+          const randomTarget =
+            livingPlayers[Math.floor(Math.random() * livingPlayers.length)];
           if (randomTarget) {
-            game.actions[player.id] = { 
-              targetId: randomTarget.id, 
-              action: player.role 
+            game.actions[player.id] = {
+              targetId: randomTarget.id,
+              action: player.role,
             };
           }
         }
@@ -398,31 +446,39 @@ io.on('connection', (socket) => {
   });
 
   // Handle voting during day phase
-  socket.on('vote', ({ gameCode, targetId }) => {
+  socket.on("vote", ({ gameCode, targetId }) => {
     const game = games.get(gameCode);
-    if (!game || game.phase !== 'day') return;
+    if (!game || game.phase !== "day") return;
 
-    const player = game.players.find(p => p.id === socket.id);
+    const player = game.players.find((p) => p.id === socket.id);
     // Only check if player is alive and not narrator
-    if (!player || !player.isAlive || player.role === 'narrator') return;
+    if (!player || !player.isAlive || player.role === "narrator") return;
 
     // Remove previous vote
     const previousVote = game.votes[socket.id];
     if (previousVote) {
-      const previousTarget = game.players.find(p => p.id === previousVote);
+      const previousTarget = game.players.find((p) => p.id === previousVote);
       if (previousTarget) previousTarget.votes--;
     }
 
     // Add new vote
     game.votes[socket.id] = targetId;
-    const target = game.players.find(p => p.id === targetId);
+    const target = game.players.find((p) => p.id === targetId);
     if (target) target.votes++;
 
     // Make bots vote (only if they haven't voted yet)
-    game.players.forEach(player => {
-      if (player.isBot && player.isAlive && player.role !== 'narrator' && !game.votes[player.id]) {
-        const livingPlayers = game.players.filter(p => p.isAlive && p.id !== player.id);
-        const randomTarget = livingPlayers[Math.floor(Math.random() * livingPlayers.length)];
+    game.players.forEach((player) => {
+      if (
+        player.isBot &&
+        player.isAlive &&
+        player.role !== "narrator" &&
+        !game.votes[player.id]
+      ) {
+        const livingPlayers = game.players.filter(
+          (p) => p.isAlive && p.id !== player.id
+        );
+        const randomTarget =
+          livingPlayers[Math.floor(Math.random() * livingPlayers.length)];
         if (randomTarget) {
           game.votes[player.id] = randomTarget.id;
           randomTarget.votes = (randomTarget.votes || 0) + 1;
@@ -431,33 +487,33 @@ io.on('connection', (socket) => {
     });
 
     // Update the game state without eliminating players yet
-    io.to(gameCode).emit('gameState', game);
+    io.to(gameCode).emit("gameState", game);
   });
 
   // Handle next phase (narrator only)
-  socket.on('nextPhase', ({ gameCode }) => {
+  socket.on("nextPhase", ({ gameCode }) => {
     const game = games.get(gameCode);
     if (!game) return;
 
-    const narrator = game.players.find(p => p.role === 'narrator');
+    const narrator = game.players.find((p) => p.role === "narrator");
     if (narrator.id !== socket.id) return;
 
     // If transitioning from day to night, process votes
-    if (game.phase === 'day') {
+    if (game.phase === "day") {
       const eliminatedPlayerId = calculateVoteResults(game);
-      
+
       if (eliminatedPlayerId) {
-        const eliminated = game.players.find(p => p.id === eliminatedPlayerId);
+        const eliminated = game.players.find(
+          (p) => p.id === eliminatedPlayerId
+        );
         if (eliminated) {
           eliminated.isAlive = false;
           eliminated.isSpectator = true;
-          
-          io.to(eliminated.id).emit('playerInfo', eliminated);
-          
+          io.to(eliminated.id).emit("playerInfo", eliminated);
           game.publicMessage = `${eliminated.name} was eliminated by vote! They were a ${eliminated.role}.`;
-          
+
           if (checkGameEnd(game)) {
-            io.to(gameCode).emit('gameState', game);
+            io.to(gameCode).emit("gameState", game);
             return;
           }
         }
@@ -467,43 +523,43 @@ io.on('connection', (socket) => {
     }
 
     // Switch phase and clear votes/actions
-    game.phase = game.phase === 'night' ? 'day' : 'night';
+    game.phase = game.phase === "night" ? "day" : "night";
     game.votes = {};
     game.actions = {};
-    game.players.forEach(p => p.votes = 0);
+    game.players.forEach((p) => (p.votes = 0));
 
-    io.to(gameCode).emit('gameState', game);
+    io.to(gameCode).emit("gameState", game);
   });
 
   // Add reconnection handler
-  socket.on('reconnect', ({ gameCode, playerId, playerName }) => {
-    console.log('Reconnection attempt:', { gameCode, playerId, playerName });
-    
+  socket.on("reconnect", ({ gameCode, playerId, playerName }) => {
+    console.log("Reconnection attempt:", { gameCode, playerId, playerName });
+
     const success = handleReconnection(socket, gameCode, playerId, playerName);
     if (!success) {
-      socket.emit('error', 'Unable to reconnect to game');
+      socket.emit("error", "Unable to reconnect to game");
       return;
     }
-    
+
     // Notify other players
-    socket.to(gameCode).emit('playerReconnected', playerName);
+    socket.to(gameCode).emit("playerReconnected", playerName);
   });
 
   // Modify disconnect handler to keep player in game
-  socket.on('disconnect', () => {
+  socket.on("disconnect", () => {
     for (const [gameCode, game] of games) {
-      const player = game.players.find(p => p.id === socket.id);
+      const player = game.players.find((p) => p.id === socket.id);
       if (player) {
         // Don't remove the player, just mark them as disconnected
         player.disconnected = true;
-        io.to(gameCode).emit('gameState', game);
+        io.to(gameCode).emit("gameState", game);
         break;
       }
     }
   });
 
   // Add new handler for adding test players
-  socket.on('addTestPlayers', ({ gameCode, numPlayers }) => {
+  socket.on("addTestPlayers", ({ gameCode, numPlayers }) => {
     const game = games.get(gameCode);
     if (!game || game.isGameStarted) return;
 
@@ -513,66 +569,69 @@ io.on('connection', (socket) => {
       game.players.push(botPlayer);
     }
 
-    io.to(gameCode).emit('gameState', game);
+    io.to(gameCode).emit("gameState", game);
   });
 
   // Add restart game handler
-  socket.on('restart-game', ({ gameCode }) => {
+  socket.on("restart-game", ({ gameCode }) => {
     const game = games.get(gameCode);
     if (!game) return;
 
-    const narrator = game.players.find(p => p.role === 'narrator');
+    const narrator = game.players.find((p) => p.role === "narrator");
     if (narrator.id !== socket.id) return;
 
     // Create a new game state with the same players
-    const newGame = createGameState(gameCode, game.players.map(p => ({
-      ...p,
-      role: p.id === narrator.id ? 'narrator' : undefined,
-      isAlive: true,
-      votes: 0,
-      isSpectator: false
-    })));
+    const newGame = createGameState(
+      gameCode,
+      game.players.map((p) => ({
+        ...p,
+        role: p.id === narrator.id ? "narrator" : undefined,
+        isAlive: true,
+        votes: 0,
+        isSpectator: false,
+      }))
+    );
 
     // Assign roles to all non-narrator players
     newGame.players = assignRoles(newGame.players);
     newGame.isGameStarted = true;
-    newGame.phase = 'night';
+    newGame.phase = "night";
 
     // Replace the old game with the new one
     games.set(gameCode, newGame);
 
     // Send updated player info to each player
-    newGame.players.forEach(player => {
-      io.to(player.id).emit('playerInfo', player);
+    newGame.players.forEach((player) => {
+      io.to(player.id).emit("playerInfo", player);
     });
 
     // Send the new game state to all players
-    io.to(gameCode).emit('gameState', newGame);
+    io.to(gameCode).emit("gameState", newGame);
   });
 
-  socket.on('leaveGame', ({ gameCode }) => {
+  socket.on("leaveGame", ({ gameCode }) => {
     const game = games.get(gameCode);
     if (!game) return;
 
     // Remove player from the game
-    const playerIndex = game.players.findIndex(p => p.id === socket.id);
+    const playerIndex = game.players.findIndex((p) => p.id === socket.id);
     if (playerIndex !== -1) {
       const player = game.players[playerIndex];
       game.players.splice(playerIndex, 1);
-      
+
       // If game is empty, delete it
       if (game.players.length === 0) {
         games.delete(gameCode);
       } else {
         // If narrator leaves, assign new narrator
-        if (player.role === 'narrator' && !game.isGameStarted) {
+        if (player.role === "narrator" && !game.isGameStarted) {
           const newNarrator = game.players[0];
-          newNarrator.role = 'narrator';
-          io.to(newNarrator.id).emit('playerInfo', newNarrator);
+          newNarrator.role = "narrator";
+          io.to(newNarrator.id).emit("playerInfo", newNarrator);
         }
-        
+
         // Update remaining players
-        io.to(gameCode).emit('gameState', game);
+        io.to(gameCode).emit("gameState", game);
       }
 
       // Leave the socket room
@@ -582,7 +641,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 3000;
-httpServer.listen(PORT, '0.0.0.0', () => {
+httpServer.listen(PORT, "0.0.0.0", () => {
   console.log(`Server running on port ${PORT}`);
-  console.log('Server fully started!');
+  console.log("Server fully started!");
 });
