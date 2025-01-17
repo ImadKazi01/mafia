@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from 'react';
-import { io, Socket } from 'socket.io-client';
-import { Home } from './components/Home';
-import { Lobby } from './components/Lobby';
-import { Game } from './components/Game';
-import { GameState, Player } from './types';
+import React, { useState, useEffect } from "react";
+import { io, Socket } from "socket.io-client";
+import { Home } from "./components/Home";
+import { Lobby } from "./components/Lobby";
+import { Game } from "./components/Game";
+import { GameState, Player } from "./types";
 
-const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || "http://localhost:3000";
 
 export default function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
@@ -18,17 +18,17 @@ export default function App() {
     const newSocket = io(SOCKET_URL);
     setSocket(newSocket);
 
-    newSocket.on('gameState', (state: GameState) => {
+    newSocket.on("gameState", (state: GameState) => {
       setGameState(state);
       setError(null);
     });
 
-    newSocket.on('playerInfo', (player: Player) => {
+    newSocket.on("playerInfo", (player: Player) => {
       setCurrentPlayer(player);
       setError(null);
     });
 
-    newSocket.on('error', (message: string) => {
+    newSocket.on("error", (message: string) => {
       setError(message);
     });
 
@@ -39,120 +39,123 @@ export default function App() {
 
   useEffect(() => {
     if (socket) {
-      socket.on('gameState', (updatedState: GameState) => {
+      socket.on("gameState", (updatedState: GameState) => {
         setGameState(updatedState);
       });
 
-      socket.on('playerInfo', (playerInfo: Player) => {
+      socket.on("playerInfo", (playerInfo: Player) => {
         setCurrentPlayer(playerInfo);
       });
 
       return () => {
-        socket.off('gameState');
-        socket.off('playerInfo');
+        socket.off("gameState");
+        socket.off("playerInfo");
       };
     }
   }, [socket]);
 
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
-    const code = params.get('code');
+    const code = params.get("code");
     if (code && !gameState) {
-      window.history.replaceState({}, '', window.location.pathname);
+      window.history.replaceState({}, "", window.location.pathname);
       setJoinCode(code);
     }
   }, [gameState]);
 
   useEffect(() => {
     if (gameState && currentPlayer) {
-      sessionStorage.setItem('gameSession', JSON.stringify({
-        gameCode: gameState.gameCode,
-        playerId: currentPlayer.id,
-        playerName: currentPlayer.name
-      }));
+      sessionStorage.setItem(
+        "gameSession",
+        JSON.stringify({
+          gameCode: gameState.gameCode,
+          playerId: currentPlayer.id,
+          playerName: currentPlayer.name,
+        })
+      );
     }
   }, [gameState, currentPlayer]);
 
   useEffect(() => {
-    const savedSession = sessionStorage.getItem('gameSession');
+    const savedSession = sessionStorage.getItem("gameSession");
     if (savedSession && socket) {
       const session = JSON.parse(savedSession);
-      socket.emit('reconnect', session);
+      socket.emit("reconnect", session);
     }
   }, [socket]);
 
   useEffect(() => {
     if (!socket) return;
 
-    socket.on('disconnect', () => {
-      console.log('Disconnected from server, attempting to reconnect...');
+    socket.on("disconnect", () => {
+      console.log("Disconnected from server, attempting to reconnect...");
     });
 
-    socket.on('connect', () => {
-      const savedSession = sessionStorage.getItem('gameSession');
+    socket.on("connect", () => {
+      const savedSession = sessionStorage.getItem("gameSession");
       if (savedSession) {
         const session = JSON.parse(savedSession);
-        socket.emit('reconnect', session);
+        socket.emit("reconnect", session);
       }
     });
 
     return () => {
-      socket.off('disconnect');
-      socket.off('connect');
+      socket.off("disconnect");
+      socket.off("connect");
     };
   }, [socket]);
 
   const handleCreateGame = (playerName: string) => {
-    socket?.emit('createGame', { playerName });
+    socket?.emit("createGame", { playerName });
   };
 
   const handleJoinGame = (gameCode: string, playerName: string) => {
-    socket?.emit('joinGame', { gameCode, playerName });
+    socket?.emit("joinGame", { gameCode, playerName });
   };
 
   const handleStartGame = () => {
     if (gameState) {
-      socket?.emit('startGame', { gameCode: gameState.gameCode });
+      socket?.emit("startGame", { gameCode: gameState.gameCode });
     }
   };
 
   const handleGameAction = (action: string) => {
     if (!gameState || !currentPlayer) return;
 
-    if (action === 'next-phase') {
-      socket?.emit('nextPhase', { gameCode: gameState.gameCode });
+    if (action === "next-phase") {
+      socket?.emit("nextPhase", { gameCode: gameState.gameCode });
       return;
     }
 
-    if (action === 'restart-game') {
-      socket?.emit('restart-game', { gameCode: gameState.gameCode });
+    if (action === "restart-game") {
+      socket?.emit("restart-game", { gameCode: gameState.gameCode });
       return;
     }
 
-    if (gameState.phase === 'night') {
-      socket?.emit('gameAction', {
+    if (gameState.phase === "night") {
+      socket?.emit("gameAction", {
         gameCode: gameState.gameCode,
         targetId: action,
-        action: currentPlayer.role
+        action: currentPlayer.role,
       });
     } else {
-      socket?.emit('vote', {
+      socket?.emit("vote", {
         gameCode: gameState.gameCode,
-        targetId: action
+        targetId: action,
       });
     }
   };
 
   const handleLeaveGame = () => {
     if (socket && gameState) {
-      socket.emit('leaveGame', { gameCode: gameState.gameCode });
+      socket.emit("leaveGame", { gameCode: gameState.gameCode });
+      sessionStorage.removeItem("gameSession");
+      setGameState(null);
+      setCurrentPlayer(null);
     }
-    sessionStorage.removeItem('gameSession');
-    setGameState(null);
-    setCurrentPlayer(null);
   };
 
-  if (!gameState) {
+  if (!gameState || !currentPlayer) {
     return (
       <Home
         onCreateGame={handleCreateGame}
@@ -167,7 +170,7 @@ export default function App() {
     return (
       <Lobby
         gameState={gameState}
-        currentPlayer={currentPlayer!}
+        currentPlayer={currentPlayer}
         onStartGame={handleStartGame}
         onLeaveGame={handleLeaveGame}
       />
@@ -177,7 +180,7 @@ export default function App() {
   return (
     <Game
       gameState={gameState}
-      currentPlayer={currentPlayer!}
+      currentPlayer={currentPlayer}
       onAction={handleGameAction}
       onLeaveGame={handleLeaveGame}
     />
