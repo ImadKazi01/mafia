@@ -108,14 +108,12 @@ export function Home({
                   Join Game
                 </button>
 
-                {isGameNotFound && (
-                  <button
-                    onClick={() => (window.location.href = "/")}
-                    className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors"
-                  >
-                    Return Home
-                  </button>
-                )}
+                <button
+                  onClick={() => (window.location.href = "/")}
+                  className="w-full flex items-center justify-center gap-2 bg-gray-600 hover:bg-gray-700 px-4 py-2 rounded-md transition-colors"
+                >
+                  Return Home
+                </button>
               </div>
             ) : (
               <>

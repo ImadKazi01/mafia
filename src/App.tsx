@@ -58,7 +58,7 @@ export default function App() {
     const params = new URLSearchParams(window.location.search);
     const code = params.get("code");
     if (code && !gameState) {
-      window.history.replaceState({}, "", window.location.pathname);
+      window.history.pushState({}, "", "/");
       setJoinCode(code);
     }
   }, [gameState]);
@@ -152,6 +152,8 @@ export default function App() {
       sessionStorage.removeItem("gameSession");
       setGameState(null);
       setCurrentPlayer(null);
+      setJoinCode(null);
+      window.history.pushState({}, "", "/");
     }
   };
 
