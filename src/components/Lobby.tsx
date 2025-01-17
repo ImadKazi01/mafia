@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { GameState, Player } from '../types';
-import { Copy, Check } from 'lucide-react';
+import { Share2, Check } from 'lucide-react';
 
 type LobbyProps = {
   gameState: GameState;
@@ -9,13 +9,28 @@ type LobbyProps = {
 };
 
 export function Lobby({ gameState, currentPlayer, onStartGame }: LobbyProps) {
-  const [copied, setCopied] = useState(false);
+  const [shared, setShared] = useState(false);
 
-  const handleCopyLink = () => {
+  const handleShare = async () => {
     const url = `${window.location.origin}?code=${gameState.gameCode}`;
-    navigator.clipboard.writeText(url);
-    setCopied(true);
-    setTimeout(() => setCopied(false), 2000);
+    
+    if (navigator.share) {
+      try {
+        await navigator.share({
+          title: 'Join my Mafia game!',
+          text: 'Join my game of Mafia!',
+          url: url
+        });
+        setShared(true);
+      } catch (error) {
+        console.error('Error sharing:', error);
+      }
+    } else {
+      navigator.clipboard.writeText(url);
+      setShared(true);
+    }
+    
+    setTimeout(() => setShared(false), 2000);
   };
 
   const isNarrator = currentPlayer.role === 'narrator';
@@ -30,18 +45,18 @@ export function Lobby({ gameState, currentPlayer, onStartGame }: LobbyProps) {
               Game Code: {gameState.gameCode}
             </p>
             <button
-              onClick={handleCopyLink}
+              onClick={handleShare}
               className="flex items-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded transition-colors"
             >
-              {copied ? (
+              {shared ? (
                 <>
                   <Check size={20} />
-                  Copied!
+                  Shared!
                 </>
               ) : (
                 <>
-                  <Copy size={20} />
-                  Share Link
+                  <Share2 size={20} />
+                  Share Game
                 </>
               )}
             </button>
