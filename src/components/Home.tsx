@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { Users, UserPlus } from 'lucide-react';
+import logo from '../assets/logo.svg';
 
 type HomeProps = {
   onCreateGame: (playerName: string) => void;
@@ -60,7 +61,11 @@ export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps
     <div className="min-h-screen bg-gray-900 text-white flex items-center justify-center p-4">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
-          <h1 className="text-4xl font-bold mb-2">Mafia Game</h1>
+          <img 
+            src={logo} 
+            alt="Mafia Game Logo" 
+            className="w-56 mx-auto mb-8"
+          />
           {initialCode ? (
             <p className="text-gray-400">Join game: {initialCode}</p>
           ) : (
