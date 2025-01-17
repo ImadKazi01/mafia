@@ -63,6 +63,45 @@ export default function App() {
     }
   }, [gameState]);
 
+  useEffect(() => {
+    if (gameState && currentPlayer) {
+      sessionStorage.setItem('gameSession', JSON.stringify({
+        gameCode: gameState.gameCode,
+        playerId: currentPlayer.id,
+        playerName: currentPlayer.name
+      }));
+    }
+  }, [gameState, currentPlayer]);
+
+  useEffect(() => {
+    const savedSession = sessionStorage.getItem('gameSession');
+    if (savedSession && socket) {
+      const session = JSON.parse(savedSession);
+      socket.emit('reconnect', session);
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    if (!socket) return;
+
+    socket.on('disconnect', () => {
+      console.log('Disconnected from server, attempting to reconnect...');
+    });
+
+    socket.on('connect', () => {
+      const savedSession = sessionStorage.getItem('gameSession');
+      if (savedSession) {
+        const session = JSON.parse(savedSession);
+        socket.emit('reconnect', session);
+      }
+    });
+
+    return () => {
+      socket.off('disconnect');
+      socket.off('connect');
+    };
+  }, [socket]);
+
   const handleCreateGame = (playerName: string) => {
     socket?.emit('createGame', { playerName });
   };
@@ -102,6 +141,12 @@ export default function App() {
         targetId: action
       });
     }
+  };
+
+  const handleLeaveGame = () => {
+    sessionStorage.removeItem('gameSession');
+    setGameState(null);
+    setCurrentPlayer(null);
   };
 
   if (!gameState) {

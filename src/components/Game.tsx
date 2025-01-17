@@ -18,6 +18,7 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
   const isMafia = currentPlayer.role === 'mafia';
   const isDoctor = currentPlayer.role === 'doctor';
   const isGameOver = gameState.isGameOver;
+  const [isReconnecting, setIsReconnecting] = useState(false);
 
   // Find the most up-to-date player info from gameState
   const updatedPlayerInfo = gameState.players.find(p => p.id === currentPlayer.id);
@@ -78,8 +79,30 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
     return null;
   };
 
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        setIsReconnecting(true);
+        // The socket will automatically try to reconnect
+        setTimeout(() => setIsReconnecting(false), 2000);
+      }
+    };
+
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+    return () => {
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, []);
+
   return (
     <>
+      {isReconnecting && (
+        <div className="fixed top-0 left-0 right-0 bg-yellow-900/90 p-4 text-center shadow-lg z-50">
+          <p className="text-yellow-100 font-bold">
+            Reconnecting to game...
+          </p>
+        </div>
+      )}
       {isEliminated && (
         <div className="fixed top-0 left-0 right-0 bg-red-900/90 p-4 text-center shadow-lg z-50">
           <p className="text-xl text-red-100 font-bold mb-1">

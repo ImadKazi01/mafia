@@ -190,6 +190,28 @@ function getNarratorNightInfo(game) {
   };
 }
 
+// Add near the top with other utility functions
+function handleReconnection(socket, gameCode, playerId, playerName) {
+  const game = games.get(gameCode);
+  if (!game) return false;
+
+  // Find the player in the game
+  const player = game.players.find(p => p.id === playerId || p.name === playerName);
+  if (!player) return false;
+
+  // Update the player's socket ID
+  player.id = socket.id;
+  
+  // Rejoin the game room
+  socket.join(gameCode);
+  
+  // Send current game state and player info
+  socket.emit('playerInfo', player);
+  socket.emit('gameState', game);
+  
+  return true;
+}
+
 io.on('connection', (socket) => {
   console.log('Client connected:', socket.id);
 
@@ -453,17 +475,28 @@ io.on('connection', (socket) => {
     io.to(gameCode).emit('gameState', game);
   });
 
-  // Handle disconnection
+  // Add reconnection handler
+  socket.on('reconnect', ({ gameCode, playerId, playerName }) => {
+    console.log('Reconnection attempt:', { gameCode, playerId, playerName });
+    
+    const success = handleReconnection(socket, gameCode, playerId, playerName);
+    if (!success) {
+      socket.emit('error', 'Unable to reconnect to game');
+      return;
+    }
+    
+    // Notify other players
+    socket.to(gameCode).emit('playerReconnected', playerName);
+  });
+
+  // Modify disconnect handler to keep player in game
   socket.on('disconnect', () => {
     for (const [gameCode, game] of games) {
-      const playerIndex = game.players.findIndex(p => p.id === socket.id);
-      if (playerIndex !== -1) {
-        game.players.splice(playerIndex, 1);
-        if (game.players.length === 0) {
-          games.delete(gameCode);
-        } else {
-          io.to(gameCode).emit('gameState', game);
-        }
+      const player = game.players.find(p => p.id === socket.id);
+      if (player) {
+        // Don't remove the player, just mark them as disconnected
+        player.disconnected = true;
+        io.to(gameCode).emit('gameState', game);
         break;
       }
     }
