@@ -3,8 +3,12 @@ import { createServer } from 'http';
 import { Server } from 'socket.io';
 import cors from 'cors';
 
+console.log('Starting server...');
+console.log('Node environment:', process.env.NODE_ENV);
+
 const app = express();
 
+console.log('Setting up CORS...');
 // Add preflight handling
 app.options('*', cors());
 
@@ -15,8 +19,10 @@ app.use(cors({
   credentials: true
 }));
 
+console.log('Creating HTTP server...');
 const httpServer = createServer(app);
 
+console.log('Setting up Socket.IO...');
 const io = new Server(httpServer, {
   cors: {
     origin: ['https://mafiamystery.netlify.app', 'http://localhost:5173'],
@@ -25,7 +31,12 @@ const io = new Server(httpServer, {
     credentials: true
   },
   transports: ['websocket', 'polling'],
-  allowEIO3: true // Enable Socket.IO v3 compatibility
+  allowEIO3: true
+});
+
+// Add a basic health check endpoint
+app.get('/', (req, res) => {
+  res.send('Server is running');
 });
 
 // Store game sessions
@@ -516,6 +527,7 @@ io.on('connection', (socket) => {
 });
 
 const PORT = process.env.PORT || 8080;
-httpServer.listen(PORT, () => {
+httpServer.listen(PORT, '0.0.0.0', () => {
   console.log(`Server running on port ${PORT}`);
+  console.log('Server fully started!');
 });
