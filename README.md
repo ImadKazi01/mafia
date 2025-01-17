@@ -102,16 +102,18 @@ Depending on your setup, your React app may be in the root or in a `client/` fol
    - **Mafia** collaboratively pick one target to eliminate.
    - **Doctor** chooses a target to save.
    - If the Doctor saves the same person the Mafia attempt to kill, they survive.
+  
+5. **Day Phase**:
+   - Kills and Saves from the **Mafia** and the **Doctor** are reveled to the players.
+   - Players discuss and elminate who they suspect is the mafia.
 
-5. **Results**:
+6. **Results**:
    - The server notifies everyone of who was killed.
    - In a more advanced scenario, continue to the **Day Phase** (discussion & voting).
 
 ---
 
 ## Customization Ideas
-
-- **Day Phase & Voting**: Let players discuss and vote to eliminate a suspected Mafia.
 - **More Roles**: Add a Detective, Jester, Vigilante, etc.
 - **Persistent Database**: Use MongoDB or PostgreSQL if you want to track stats over time.
 - **Authentication**: Add a login system if you need user accounts.
