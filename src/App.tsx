@@ -104,15 +104,6 @@ export default function App() {
     }
   };
 
-  const handleAddTestPlayers = (numPlayers: number) => {
-    if (gameState) {
-      socket?.emit('addTestPlayers', { 
-        gameCode: gameState.gameCode, 
-        numPlayers 
-      });
-    }
-  };
-
   if (!gameState) {
     return (
       <Home
@@ -130,7 +121,6 @@ export default function App() {
         gameState={gameState}
         currentPlayer={currentPlayer!}
         onStartGame={handleStartGame}
-        onAddTestPlayers={handleAddTestPlayers}
       />
     );
   }

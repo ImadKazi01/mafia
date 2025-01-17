@@ -23,16 +23,6 @@ export function Game({ gameState, currentPlayer, onAction }: GameProps) {
   const updatedPlayerInfo = gameState.players.find(p => p.id === currentPlayer.id);
   const isEliminated = !updatedPlayerInfo?.isAlive;
 
-  // Add debug logs
-  useEffect(() => {
-    console.log('Player State Updated:', {
-      currentPlayer,
-      updatedPlayerInfo,
-      gameStatePlayers: gameState.players,
-      isEliminated
-    });
-  }, [currentPlayer, gameState.players, isEliminated]);
-
   // Get other mafia members and their targets
   const mafiaMembers = gameState.players.filter(p => p.role === 'mafia' && p.isAlive);
   const mafiaActions = Object.entries(gameState.actions)

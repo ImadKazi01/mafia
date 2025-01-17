@@ -6,10 +6,9 @@ type LobbyProps = {
   gameState: GameState;
   currentPlayer: Player;
   onStartGame: () => void;
-  onAddTestPlayers?: (numPlayers: number) => void;
 };
 
-export function Lobby({ gameState, currentPlayer, onStartGame, onAddTestPlayers }: LobbyProps) {
+export function Lobby({ gameState, currentPlayer, onStartGame }: LobbyProps) {
   const [copied, setCopied] = useState(false);
 
   const handleCopyLink = () => {
@@ -64,27 +63,6 @@ export function Lobby({ gameState, currentPlayer, onStartGame, onAddTestPlayers 
             ))}
           </div>
         </div>
-
-        {/* Test Controls */}
-        {isNarrator && onAddTestPlayers && (
-          <div className="bg-gray-800 rounded-lg p-6 mb-6">
-            <h2 className="text-xl font-semibold mb-4">Test Controls</h2>
-            <div className="flex gap-4">
-              <button
-                onClick={() => onAddTestPlayers(3)}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded"
-              >
-                Add 3 Bots
-              </button>
-              <button
-                onClick={() => onAddTestPlayers(5)}
-                className="bg-purple-600 hover:bg-purple-700 px-4 py-2 rounded"
-              >
-                Add 5 Bots
-              </button>
-            </div>
-          </div>
-        )}
 
         {isNarrator && (
           <div className="text-center">
