@@ -4,21 +4,28 @@ import { Server } from 'socket.io';
 import cors from 'cors';
 
 const app = express();
+
+// Add preflight handling
+app.options('*', cors());
+
 app.use(cors({
-  origin: "*",
-  methods: ["GET", "POST", "OPTIONS"],
-  credentials: false
+  origin: ['https://mafiamystery.netlify.app', 'http://localhost:5173'],
+  methods: ['GET', 'POST', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  credentials: true
 }));
 
 const httpServer = createServer(app);
 
 const io = new Server(httpServer, {
   cors: {
-    origin: "*",
-    methods: ["GET", "POST", "OPTIONS"],
-    credentials: false
+    origin: ['https://mafiamystery.netlify.app', 'http://localhost:5173'],
+    methods: ['GET', 'POST', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization'],
+    credentials: true
   },
-  transports: ['websocket', 'polling']
+  transports: ['websocket', 'polling'],
+  allowEIO3: true // Enable Socket.IO v3 compatibility
 });
 
 // Store game sessions
