@@ -5,6 +5,12 @@ export type Player = {
   isAlive?: boolean;
   votes?: number;
   isSpectator?: boolean;
+  isBot?: boolean;
+};
+
+export type GameAction = {
+  targetId: string;
+  action: string;
 };
 
 export type GameState = {
@@ -12,5 +18,19 @@ export type GameState = {
   players: Player[];
   phase: 'lobby' | 'night' | 'day';
   isGameStarted: boolean;
+  isGameOver: boolean;
   message: string | null;
+  publicMessage: string | null;
+  actions: { [key: string]: GameAction };
+  votes: { [key: string]: string };
+  nightInfo?: {
+    mafiaActions: Array<{
+      mafiaName: string;
+      targetName: string;
+    }>;
+    doctorInfo?: {
+      doctorName: string;
+      targetName: string;
+    } | null;
+  };
 };

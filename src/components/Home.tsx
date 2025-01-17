@@ -5,19 +5,52 @@ type HomeProps = {
   onCreateGame: (playerName: string) => void;
   onJoinGame: (gameCode: string, playerName: string) => void;
   error: string | null;
+  initialCode?: string;
 };
 
-export function Home({ onCreateGame, onJoinGame, error }: HomeProps) {
-  const [gameCode, setGameCode] = useState('');
+export function Home({ onCreateGame, onJoinGame, error, initialCode }: HomeProps) {
+  const [gameCode, setGameCode] = useState(initialCode || '');
   const [playerName, setPlayerName] = useState('');
-  const [isJoining, setIsJoining] = useState(false);
+  const [isJoining, setIsJoining] = useState(!!initialCode);
+  const [nameError, setNameError] = useState('');
+
+  const validateName = (name: string) => {
+    if (name.length < 2) {
+      setNameError('Name must be at least 2 characters');
+      return false;
+    }
+    if (name.length > 20) {
+      setNameError('Name must be less than 20 characters');
+      return false;
+    }
+    if (!/^[a-zA-Z0-9\s]+$/.test(name)) {
+      setNameError('Name can only contain letters, numbers, and spaces');
+      return false;
+    }
+    setNameError('');
+    return true;
+  };
+
+  const handleNameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const newName = e.target.value;
+    setPlayerName(newName);
+    if (newName) {
+      validateName(newName);
+    } else {
+      setNameError('');
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!playerName.trim()) return;
+    
+    if (!validateName(playerName)) {
+      return;
+    }
 
-    if (isJoining) {
-      onJoinGame(gameCode, playerName);
+    if (isJoining || initialCode) {
+      onJoinGame(gameCode || initialCode || '', playerName);
     } else {
       onCreateGame(playerName);
     }
@@ -28,14 +61,18 @@ export function Home({ onCreateGame, onJoinGame, error }: HomeProps) {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <h1 className="text-4xl font-bold mb-2">Mafia Game</h1>
-          <p className="text-gray-400">Create a new game or join an existing one</p>
+          {initialCode ? (
+            <p className="text-gray-400">Join game: {initialCode}</p>
+          ) : (
+            <p className="text-gray-400">Create a new game or join an existing one</p>
+          )}
         </div>
 
         <div className="bg-gray-800 p-8 rounded-lg shadow-xl">
           <form onSubmit={handleSubmit} className="space-y-6">
-            {error && (
+            {(error || nameError) && (
               <div className="bg-red-500/20 border border-red-500 text-red-200 px-4 py-2 rounded-md">
-                {error}
+                {error || nameError}
               </div>
             )}
             
@@ -46,14 +83,17 @@ export function Home({ onCreateGame, onJoinGame, error }: HomeProps) {
               <input
                 type="text"
                 value={playerName}
-                onChange={(e) => setPlayerName(e.target.value)}
-                className="w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none"
+                onChange={handleNameChange}
+                className={`w-full px-4 py-2 bg-gray-700 rounded-md focus:ring-2 focus:ring-blue-500 outline-none
+                  ${nameError ? 'border border-red-500' : ''}`}
                 placeholder="Enter your name"
                 required
+                autoFocus
+                maxLength={20}
               />
             </div>
 
-            {isJoining && (
+            {(isJoining && !initialCode) && (
               <div>
                 <label className="block text-sm font-medium mb-2">
                   Game Code
@@ -70,22 +110,35 @@ export function Home({ onCreateGame, onJoinGame, error }: HomeProps) {
             )}
 
             <div className="flex gap-4">
-              <button
-                type="submit"
-                onClick={() => setIsJoining(false)}
-                className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
-              >
-                <UserPlus size={20} />
-                Create Game
-              </button>
-              <button
-                type="submit"
-                onClick={() => setIsJoining(true)}
-                className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors"
-              >
-                <Users size={20} />
-                Join Game
-              </button>
+              {!initialCode && (
+                <>
+                  <button
+                    type="submit"
+                    onClick={() => setIsJoining(false)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-blue-600 hover:bg-blue-700 px-4 py-2 rounded-md transition-colors"
+                  >
+                    <UserPlus size={20} />
+                    Create Game
+                  </button>
+                  <button
+                    type="submit"
+                    onClick={() => setIsJoining(true)}
+                    className="flex-1 flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors"
+                  >
+                    <Users size={20} />
+                    Join Game
+                  </button>
+                </>
+              )}
+              {initialCode && (
+                <button
+                  type="submit"
+                  className="w-full flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 px-4 py-2 rounded-md transition-colors"
+                >
+                  <Users size={20} />
+                  Join Game
+                </button>
+              )}
             </div>
           </form>
         </div>

@@ -5,13 +5,14 @@ import { Lobby } from './components/Lobby';
 import { Game } from './components/Game';
 import { GameState, Player } from './types';
 
-const SOCKET_URL = 'http://localhost:3000';
+const SOCKET_URL = import.meta.env.VITE_SOCKET_URL || 'http://localhost:3000';
 
 export default function App() {
   const [socket, setSocket] = useState<Socket | null>(null);
   const [gameState, setGameState] = useState<GameState | null>(null);
   const [currentPlayer, setCurrentPlayer] = useState<Player | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [joinCode, setJoinCode] = useState<string | null>(null);
 
   useEffect(() => {
     const newSocket = io(SOCKET_URL);
@@ -36,6 +37,32 @@ export default function App() {
     };
   }, []);
 
+  useEffect(() => {
+    if (socket) {
+      socket.on('gameState', (updatedState: GameState) => {
+        setGameState(updatedState);
+      });
+
+      socket.on('playerInfo', (playerInfo: Player) => {
+        setCurrentPlayer(playerInfo);
+      });
+
+      return () => {
+        socket.off('gameState');
+        socket.off('playerInfo');
+      };
+    }
+  }, [socket]);
+
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const code = params.get('code');
+    if (code && !gameState) {
+      window.history.replaceState({}, '', window.location.pathname);
+      setJoinCode(code);
+    }
+  }, [gameState]);
+
   const handleCreateGame = (playerName: string) => {
     socket?.emit('createGame', { playerName });
   };
@@ -50,21 +77,38 @@ export default function App() {
     }
   };
 
-  const handleGameAction = (targetId: string) => {
+  const handleGameAction = (action: string) => {
     if (!gameState || !currentPlayer) return;
 
-    if (currentPlayer.role === 'narrator' && targetId === 'next-phase') {
+    if (action === 'next-phase') {
       socket?.emit('nextPhase', { gameCode: gameState.gameCode });
-    } else if (gameState.phase === 'night' && (currentPlayer.role === 'mafia' || currentPlayer.role === 'doctor')) {
+      return;
+    }
+
+    if (action === 'restart-game') {
+      socket?.emit('restart-game', { gameCode: gameState.gameCode });
+      return;
+    }
+
+    if (gameState.phase === 'night') {
       socket?.emit('gameAction', {
         gameCode: gameState.gameCode,
-        targetId,
+        targetId: action,
         action: currentPlayer.role
       });
-    } else if (gameState.phase === 'day' && currentPlayer.role !== 'narrator') {
+    } else {
       socket?.emit('vote', {
         gameCode: gameState.gameCode,
-        targetId
+        targetId: action
+      });
+    }
+  };
+
+  const handleAddTestPlayers = (numPlayers: number) => {
+    if (gameState) {
+      socket?.emit('addTestPlayers', { 
+        gameCode: gameState.gameCode, 
+        numPlayers 
       });
     }
   };
@@ -75,6 +119,7 @@ export default function App() {
         onCreateGame={handleCreateGame}
         onJoinGame={handleJoinGame}
         error={error}
+        initialCode={joinCode}
       />
     );
   }
@@ -85,6 +130,7 @@ export default function App() {
         gameState={gameState}
         currentPlayer={currentPlayer!}
         onStartGame={handleStartGame}
+        onAddTestPlayers={handleAddTestPlayers}
       />
     );
   }
